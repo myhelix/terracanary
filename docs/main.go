@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/myhelix/terraform-experimental/terracanary/canarrors"
-	"github.com/myhelix/terraform-experimental/terracanary/cmd"
+	"github.com/myhelix/terracanary/canarrors"
+	"github.com/myhelix/terracanary/cmd"
 	"github.com/spf13/cobra/doc"
 	"io/ioutil"
 	"os"

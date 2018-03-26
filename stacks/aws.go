@@ -6,7 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 
-	"github.com/myhelix/terraform-experimental/terracanary/config"
+	"github.com/myhelix/terracanary/config"
 
 	"errors"
 	"fmt"

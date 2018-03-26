@@ -3,8 +3,8 @@ package cmd
 import (
 	"bufio"
 	"fmt"
-	"github.com/myhelix/terraform-experimental/terracanary/canarrors"
-	"github.com/myhelix/terraform-experimental/terracanary/stacks"
+	"github.com/myhelix/terracanary/canarrors"
+	"github.com/myhelix/terracanary/stacks"
 	"github.com/spf13/cobra"
 	"log"
 	"os"

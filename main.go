@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/myhelix/terraform-experimental/terracanary/cmd"
+	"github.com/myhelix/terracanary/cmd"
 )
 
 func main() {

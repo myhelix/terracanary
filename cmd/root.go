@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/myhelix/terraform-experimental/terracanary/config"
+	"github.com/myhelix/terracanary/config"
 	"github.com/spf13/cobra"
 )
 

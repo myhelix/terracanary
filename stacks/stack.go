@@ -1,8 +1,8 @@
 package stacks
 
 import (
-	"github.com/myhelix/terraform-experimental/terracanary/canarrors"
-	"github.com/myhelix/terraform-experimental/terracanary/config"
+	"github.com/myhelix/terracanary/canarrors"
+	"github.com/myhelix/terracanary/config"
 
 	"errors"
 	"fmt"

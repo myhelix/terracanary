@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/myhelix/terraform-experimental/terracanary/stacks"
+	"github.com/myhelix/terracanary/stacks"
 	"github.com/spf13/cobra"
 )
 

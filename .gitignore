@@ -1,0 +1,8 @@
+**/.terraform
+**/.terracanary
+terracanary-rev
+vendor/
+.dockerignore
+build-scripts
+.glide
+external
