@@ -62,6 +62,9 @@ terracanary destroy -A -f main/providers.tf --skip-confirmation`,
 				}
 			}
 			if legacy {
+				if force == "" {
+					canarrors.ExitWith(fmt.Errorf("Must specify --force when destroying legacy stack."))
+				}
 				destroyStacks = append(destroyStacks, stacks.Legacy)
 			}
 			if everything {

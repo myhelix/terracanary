@@ -391,6 +391,9 @@ func (c Command) Run() error {
 
 	if c.WorkingDirectory == "" {
 		// Normal case; based on Subdir
+		if c.Subdir == "" {
+			canarrors.InvalidStack.Details("Tried to run command for stack with no subdir.").Exit()
+		}
 		wd, err := os.Getwd()
 		if err != nil {
 			return err
