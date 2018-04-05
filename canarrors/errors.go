@@ -15,6 +15,7 @@ var (
 	PlanHasChanges        = ErrorType{15, "Tested plan has changes"}
 	Interrupted           = ErrorType{16, "Exited cleanly; interrupted by signal"}
 	Killed                = ErrorType{17, "Killed terraform; interrupted by signal"}
+	Timeout               = ErrorType{18, "Timeout expired"}
 )
 
 type ErrorType struct {

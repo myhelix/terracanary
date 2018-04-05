@@ -45,6 +45,9 @@ func Parse(subdir, vs string) (Stack, error) {
 }
 
 func (s Stack) String() string {
+	if s == Legacy {
+		return "legacy"
+	}
 	str := s.Subdir
 	if s.Version != 0 {
 		str = fmt.Sprintf("%s:%d", str, s.Version)
