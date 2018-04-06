@@ -3,13 +3,13 @@ package aws
 import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecs"
+	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/myhelix/terracanary/canarrors"
 	"github.com/myhelix/terracanary/stacks"
 	"github.com/spf13/cobra"
 
 	"fmt"
-	"github.com/aws/aws-sdk-go/service/elb"
 	"log"
 	"reflect"
 	"sort"
