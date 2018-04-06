@@ -32,7 +32,7 @@ If a service is specified, wait for it to reach the expected final state based u
 
 * Task count of current task revision == desired tasks
 * Task count of other task revisions == 0
-* The service load balancer(s), if any, are in service`,
+* The instances backing the running tasks are in service with the service load balancer, if any`,
 		Args: cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
 			if instances == -1 && service == "" {
