@@ -10,6 +10,8 @@ To bypass terraform definition errors, you can use --force to supply an empty-ex
 
 Unless --skip-confirmation is specified, terracanary will prompt for interactive confirmation if the destroy command would remove all versions of any currently existing stack (this means it always prompts for destruction of non-versioned stacks).
 
+Because it's very common for the first attempt at destroying a complex stack to fail due to ordering issues, terracanary will automatically retry once if resources are left over after the first destroy. If a stack requested for destruction still has resources remaining after 2 attempts, terracanary will continue to process other stacks requested for destruction, but will exit with code 13 at the end. Unexpected failures will exit immediately with various other codes.
+
 ```
 terracanary destroy <flags> [-- <terraform-args>...]
 ```

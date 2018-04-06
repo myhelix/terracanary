@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 )
 
 var (
@@ -34,6 +35,11 @@ func (t ErrorType) Details(stuff ...interface{}) Error {
 
 func (t ErrorType) With(err error) Error {
 	return Error{t, err}
+}
+
+// Convenience for documenting error codes
+func (t ErrorType) ExitCodeString() string {
+	return strconv.Itoa(t.ExitCode)
 }
 
 func (err Error) Error() string {
