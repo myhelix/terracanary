@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"fmt"
+	"github.com/aws/aws-sdk-go/service/elb"
 	"log"
 	"reflect"
 	"sort"
@@ -99,7 +100,10 @@ func waitForService(region, cluster, service string) {
 	ecsSvc := ecs.New(stacks.AWSSession, &aws.Config{
 		Region: &region,
 	})
-	elbSvc := elbv2.New(stacks.AWSSession, &aws.Config{
+	elbSvc1 := elb.New(stacks.AWSSession, &aws.Config{
+		Region: &region,
+	})
+	elbSvc2 := elbv2.New(stacks.AWSSession, &aws.Config{
 		Region: &region,
 	})
 
@@ -176,40 +180,54 @@ Second try:
 		}
 	}
 
+	// Don't think there would currently ever be more than 1, but might as well use for
 	for _, lb := range serv.LoadBalancers {
+		// Need to describe tasks to determine what instances we expect to be in service
+		dto, err := ecsSvc.DescribeTasks(&ecs.DescribeTasksInput{
+			Cluster: &cluster,
+			Tasks:   aws.StringSlice(finalTaskArns),
+		})
+		canarrors.ExitIf(err)
+		if len(dto.Failures) > 0 {
+			canarrors.ExitWith(fmt.Errorf("Error describing tasks: %v", dto))
+		}
+
+		var containerInstances []*string
+		for _, task := range dto.Tasks {
+			containerInstances = append(containerInstances, task.ContainerInstanceArn)
+		}
+		dcio, err := ecsSvc.DescribeContainerInstances(&ecs.DescribeContainerInstancesInput{
+			Cluster:            &cluster,
+			ContainerInstances: containerInstances,
+		})
+		canarrors.ExitIf(err)
+		if len(dcio.Failures) > 0 {
+			canarrors.ExitWith(fmt.Errorf("Error describing container instances: %v", dcio))
+		}
+
 		var name *string = lb.LoadBalancerName
 		if name != nil {
-			log.Println("Waiting for LB to be available: ", *name)
-			elbSvc.WaitUntilLoadBalancerAvailable(&elbv2.DescribeLoadBalancersInput{
-				Names: []*string{name},
+			// v1 ELB
+			log.Println("Waiting for targets to be in service with ELB: ", *name)
+
+			var targets []*elb.Instance
+			for _, ci := range dcio.ContainerInstances {
+				targets = append(targets, &elb.Instance{
+					InstanceId: ci.Ec2InstanceId,
+				})
+			}
+			log.Println("Targets: ", targets)
+
+			elbSvc1.WaitUntilInstanceInService(&elb.DescribeInstanceHealthInput{
+				LoadBalancerName: name,
+				Instances:        targets,
 			})
 		}
+
 		var tgARN *string = lb.TargetGroupArn
 		if tgARN != nil {
-			log.Println("Waiting for targets to be in service with: ", *tgARN)
-
-			// Need to describe tasks to determine what instances we expect to be in service
-			dto, err := ecsSvc.DescribeTasks(&ecs.DescribeTasksInput{
-				Cluster: &cluster,
-				Tasks:   aws.StringSlice(finalTaskArns),
-			})
-			canarrors.ExitIf(err)
-			if len(dto.Failures) > 0 {
-				canarrors.ExitWith(fmt.Errorf("Error describing tasks: %v", dto))
-			}
-
-			var containerInstances []*string
-			for _, task := range dto.Tasks {
-				containerInstances = append(containerInstances, task.ContainerInstanceArn)
-			}
-			dcio, err := ecsSvc.DescribeContainerInstances(&ecs.DescribeContainerInstancesInput{
-				Cluster:            &cluster,
-				ContainerInstances: containerInstances,
-			})
-			canarrors.ExitIf(err)
-			if len(dcio.Failures) > 0 {
-				canarrors.ExitWith(fmt.Errorf("Error describing container instances: %v", dcio))
-			}
+			// v2 ALB
+			log.Println("Waiting for targets to be in service with ALB: ", *tgARN)
 
 			var targets []*elbv2.TargetDescription
 			for _, ci := range dcio.ContainerInstances {
@@ -218,7 +236,8 @@ Second try:
 				})
 			}
 			log.Println("Targets: ", targets)
-			elbSvc.WaitUntilTargetInService(&elbv2.DescribeTargetHealthInput{
+
+			elbSvc2.WaitUntilTargetInService(&elbv2.DescribeTargetHealthInput{
 				TargetGroupArn: tgARN,
 				Targets:        targets,
 			})

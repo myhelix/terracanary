@@ -22,7 +22,7 @@ func init() {
 	var timeout time.Duration
 
 	var runCmd = &cobra.Command{
-		Use:   "run --region <region> --cluster <cluster> --task-def <taskDefARN> <cmd>",
+		Use:   "run --region <region> --cluster <cluster> --task-def <taskDefARN> -- <cmd>",
 		Short: "Run an ECS task and wait for success",
 		Long: `Runs a single ECS task that is expected to end, and watches for a successful exit code. Note that an ECS task definition can contain multiple containers, so you must specify the container name that will receive the specified command (overriding its normal docker CMD). If a log group is specified, logs for the task will be output in not-quite-realtime.
 

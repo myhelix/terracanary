@@ -1,3 +1,8 @@
+## 1.1.1 (2018-04-06)
+Fixes:
+- Fix waiting on ELBs
+- Clarify documentation for ecs run
+
 ## 1.1.0 (2018-03-30)
 Changes:
 - Add "util" subcommand
