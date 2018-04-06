@@ -28,7 +28,8 @@ terracanary apply --stack routing --input-stack-version main:$NEW_VERSION
 # Clean up old stack(s)
 terracanary destroy --all main --except main:$NEW_VERSION`,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-		return config.Read()
+		exitIf(config.Read())
+		return nil
 	},
 }
 
