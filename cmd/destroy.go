@@ -40,7 +40,9 @@ func init() {
 
 To bypass terraform definition errors, you can use --force to supply an empty-except-providers definition file to use during destruction. USING THIS OPTION WILL BYPASS THE prevent_destroy DIRECTIVE.
 
-Unless --skip-confirmation is specified, terracanary will prompt for interactive confirmation if the destroy command would remove all versions of any currently existing stack (this means it always prompts for destruction of non-versioned stacks).`,
+Unless --skip-confirmation is specified, terracanary will prompt for interactive confirmation if the destroy command would remove all versions of any currently existing stack (this means it always prompts for destruction of non-versioned stacks).
+
+Because it's very common for the first attempt at destroying a complex stack to fail due to ordering issues, terracanary will automatically retry once if resources are left over after the first destroy. If a stack requested for destruction still has resources remaining after 2 attempts, terracanary will continue to process other stacks requested for destruction, but will exit with code ` + canarrors.IncompleteDestruction.ExitCodeString() + ` at the end. Unexpected failures will exit immediately with various other codes.`,
 		Example: `terracanary destroy -s main:4 -i code:5
 terracanary destroy -s code:5 -l module.task_definition.aws_ecs_task_definition.default
 terracanary destroy -a main -a code -e main:6 -e code:6
@@ -136,18 +138,26 @@ terracanary destroy -A -f main/providers.tf --skip-confirmation`,
 					}
 				}
 
-				if force == "" {
-					err = stack.Destroy(inputStacks, args...)
-				} else {
-					err = stack.ForceDestroy(force)
-				}
-				if err != nil {
-					// If destruction failed in an expected way, keep going (but exit non-0)
-					if canarrors.Is(err, canarrors.IncompleteDestruction) {
-						anyFailure = err
+				doDestroy := func() {
+					if force == "" {
+						err = stack.Destroy(inputStacks, args...)
 					} else {
+						err = stack.ForceDestroy(force)
+					}
+					if err != nil && !canarrors.Is(err, canarrors.IncompleteDestruction) {
+						// Unexpected failure; exit immediately
 						exitWith(err)
 					}
+				}
+				doDestroy()
+				if err != nil {
+					log.Println("Retrying destroy of:", stack)
+					doDestroy()
+				}
+				if err != nil {
+					// If destruction failed in an expected way, keep going (but exit non-0 eventually)
+					// Unexpected errors were checked for above in doDestroy()
+					anyFailure = err
 				}
 			}
 

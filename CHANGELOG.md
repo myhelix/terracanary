@@ -1,3 +1,7 @@
+## 1.2.0 (2018-04-06)
+Changes:
+- Attempt destroys twice before deciding they failed
+
 ## 1.1.1 (2018-04-06)
 Fixes:
 - Fix waiting on ELBs
