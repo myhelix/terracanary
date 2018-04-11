@@ -8,7 +8,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
@@ -33,7 +32,6 @@ type Command struct {
 	Interactive      bool      // Allow input from StdIn
 	Stdout           io.Writer // If present, stdout will go here (otherwise, to stderr)
 	Stderr           io.Writer // If present, stderr will go here (otherwise, to stderr)
-	WorkingDirectory string    // Override normal working directory for Subdir
 }
 
 type terraformCmd struct {
@@ -108,7 +106,48 @@ func handleSignals() {
 	}()
 }
 
-func (s Stack) destroyPre() error {
+func (s Stack) RemoveFromState(names []string) error {
+	if len(names) > 0 {
+		nMap := make(map[string]bool)
+		for _, l := range names {
+			nMap[l] = true
+		}
+
+		resources, err := s.StateList()
+		if err != nil {
+			return err
+		}
+		var remove, leave []string
+		for _, r := range resources {
+			if nMap[r] {
+				remove = append(remove, r)
+			} else {
+				leave = append(leave, r)
+			}
+		}
+		log.Println("Removing from state:", remove)
+		log.Println("Left in state:", leave)
+		cmd := Command{
+			Stack:  s,
+			Action: "state",
+		}
+		err = cmd.InitTerraform()
+		if err != nil {
+			return err
+		}
+		for _, r := range remove {
+			cmd.Args = []string{"rm", r}
+			err = cmd.Run()
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+// Run destroy; no confirmation
+func (s Stack) Destroy(inputStacks []Stack, additionalArgs ...string) error {
 	exists, err := s.Exists()
 	if err != nil {
 		return err
@@ -116,10 +155,9 @@ func (s Stack) destroyPre() error {
 	if !exists {
 		return canarrors.NoSuchStack.Details(s)
 	}
-	return nil
-}
+	additionalArgs = append(additionalArgs, "-force")
+	s.RunAction("destroy", inputStacks, additionalArgs...)
 
-func (s Stack) destroyPost() error {
 	// Sometimes terraform thinks it failed when there's really nothing left. So we ignore the
 	// terraform exit status, and check whether any resources actually remain in the state file.
 	remaining, err := s.StateList()
@@ -138,49 +176,6 @@ func (s Stack) destroyPost() error {
 	}
 	log.Println("Stack destroyed:", s)
 	return nil
-}
-
-// Run normal destroy; no confirmation
-func (s Stack) Destroy(inputStacks []Stack, additionalArgs ...string) error {
-	if err := s.destroyPre(); err != nil {
-		return err
-	}
-	additionalArgs = append(additionalArgs, "-force")
-	s.RunAction("destroy", inputStacks, additionalArgs...)
-	return s.destroyPost()
-}
-
-// There are situations where "terraform destroy" will fail because of missing data; we can bypass
-// that by providing an empty-except-providers config. No confirmation.
-// !!! THIS WILL OVERRIDE PREVENT-DESTROY !!!
-func (s Stack) ForceDestroy(providerDefinitions string) error {
-	if err := s.destroyPre(); err != nil {
-		return err
-	}
-
-	log.Println("Attempting to force destruction using blank config.")
-
-	destroyPlayground, err := ioutil.TempDir("", "terracanary-destroy")
-	if err != nil {
-		return err
-	}
-	defer os.RemoveAll(destroyPlayground) // clean up
-
-	// We need a basic config with provider definitions to accomplish our destruction
-	err = exec.Command("cp", providerDefinitions, destroyPlayground).Run()
-	if err != nil {
-		return err
-	}
-
-	Command{
-		Stack:            s,
-		WorkingDirectory: destroyPlayground,
-		Init:             true,
-		Action:           "destroy",
-		Args:             []string{"-force"},
-		UseApplyArgs:     true,
-	}.Run()
-	return s.destroyPost()
 }
 
 func (s Stack) RunAction(action string, inputStacks []Stack, additionalArgs ...string) error {
@@ -330,12 +325,11 @@ func (c Command) InitTerraform() error {
 	writer := bufio.NewWriter(&buf)
 
 	cmd := Command{
-		Stack:            c.Stack,
-		Action:           "init",
-		Args:             args,
-		WorkingDirectory: c.WorkingDirectory,
-		Stdout:           writer,
-		Stderr:           writer,
+		Stack:  c.Stack,
+		Action: "init",
+		Args:   args,
+		Stdout: writer,
+		Stderr: writer,
 	}
 
 	err = cmd.Run()
