@@ -56,7 +56,7 @@ If a service is specified, wait for it to reach the expected final state based u
 				waitForService(region, cluster, service)
 			}
 
-			fmt.Println("Done.")
+			log.Println("Done.")
 		},
 	}
 
