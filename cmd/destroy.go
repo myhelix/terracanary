@@ -116,7 +116,7 @@ terracanary destroy -A -f main/providers.tf --skip-confirmation`,
 					continue
 				}
 
-				if force == "" {
+				if force != "" {
 					log.Println("Attempting to force destruction using blank config.")
 
 					destroyPlayground, err := ioutil.TempDir("", "terracanary-destroy")

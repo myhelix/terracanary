@@ -1,4 +1,4 @@
-## 1.2.1 (2018-04-11)
+## 1.2.2 (2018-04-12)
 Fixes:
 - Unable to leave resources when destroying legacy stack
 
