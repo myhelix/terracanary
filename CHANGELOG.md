@@ -1,3 +1,7 @@
+## 1.2.1 (2018-04-11)
+Fixes:
+- Unable to leave resources when destroying legacy stack
+
 ## 1.2.0 (2018-04-06)
 Changes:
 - Attempt destroys twice before deciding they failed

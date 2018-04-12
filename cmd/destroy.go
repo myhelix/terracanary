@@ -6,8 +6,10 @@ import (
 	"github.com/myhelix/terracanary/canarrors"
 	"github.com/myhelix/terracanary/stacks"
 	"github.com/spf13/cobra"
+	"io/ioutil"
 	"log"
 	"os"
+	"os/exec"
 	"strings"
 )
 
@@ -114,36 +116,29 @@ terracanary destroy -A -f main/providers.tf --skip-confirmation`,
 					continue
 				}
 
-				// Remove stuff from state that we don't want to destroy
-				if len(leave) > 0 {
-					leaveResources := make(map[string]bool)
-					for _, l := range leave {
-						leaveResources[l] = true
-					}
+				if force == "" {
+					log.Println("Attempting to force destruction using blank config.")
 
-					resources, err := stack.StateList()
+					destroyPlayground, err := ioutil.TempDir("", "terracanary-destroy")
 					exitIf(err)
-					for _, r := range resources {
-						if leaveResources[r] {
-							log.Println("Avoiding destruction of:", r)
-							exitIf(stacks.Command{
-								Stack:  stack,
-								Init:   true,
-								Action: "state",
-								Args:   []string{"rm", r},
-							}.Run())
-						} else {
-							log.Println("To be destroyed:", r)
-						}
-					}
+					defer os.RemoveAll(destroyPlayground) // clean up
+
+					// We need a basic config with provider definitions to accomplish our destruction
+					// If terraform doesn't have a provider, it will just ignore the resources in
+					// the state file, and think it actually did destroy everything despite doing
+					// nothing.
+					err = exec.Command("cp", force, destroyPlayground).Run()
+					exitIf(err)
+
+					stack.WorkingDirectory = destroyPlayground
 				}
 
+				// Remove stuff from state that we don't want to destroy
+				err = stack.RemoveFromState(leave)
+				exitIf(err)
+
 				doDestroy := func() {
-					if force == "" {
-						err = stack.Destroy(inputStacks, args...)
-					} else {
-						err = stack.ForceDestroy(force)
-					}
+					err = stack.Destroy(inputStacks, args...)
 					if err != nil && !canarrors.Is(err, canarrors.IncompleteDestruction) {
 						// Unexpected failure; exit immediately
 						exitWith(err)

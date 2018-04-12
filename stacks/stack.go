@@ -15,10 +15,11 @@ import (
 var Legacy = Stack{legacy: true}
 
 type Stack struct {
-	Subdir     string
-	Version    uint
-	InputAlias string // Used for input stacks to provide alternate input variable prefix
-	legacy     bool   // Is this the legacy stack?
+	Subdir           string
+	Version          uint
+	InputAlias       string // Used for input stacks to provide alternate input variable prefix
+	WorkingDirectory string // Override normal working directory for Subdir
+	legacy           bool   // Is this the legacy stack?
 }
 
 func New(subdir string, version uint) Stack {
@@ -45,7 +46,7 @@ func Parse(subdir, vs string) (Stack, error) {
 }
 
 func (s Stack) String() string {
-	if s == Legacy {
+	if s.legacy {
 		return "legacy"
 	}
 	str := s.Subdir
