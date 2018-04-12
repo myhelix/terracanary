@@ -27,7 +27,7 @@
 
 set -ex
 
-. deploy_helpers.sh
+. ../deploy_helpers.sh
 
 # Update shared stack; contains resources needed by both main and code stacks
 terracanary apply -S shared
