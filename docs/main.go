@@ -30,7 +30,9 @@ func main() {
 	exitIf(err)
 	readme := string(readmeBytes)
 	section :=
-		`#### Directory Layout
+		`For more complete examples see the [examples folder](examples).
+
+#### Directory Layout
 
 Terracanary must be run from a working directory which has subdirectories containing the terraform definitions for each stack. Terracanary will create a ".terracanary" config file when you run "terracanary init" to set up the working directory. So for the above example, the layout would look like:
 
@@ -48,6 +50,7 @@ Terracanary must be run from a working directory which has subdirectories contai
 \-- .terracanary
 ` + "```" + `
 `
+	readme = strings.Replace(readme, "```", "```bash", 1)
 	readme = strings.Replace(readme, "### Options", section+"\n### Options", 1)
 	err = ioutil.WriteFile(readmeFile, []byte(readme), os.ModePerm)
 	exitIf(err)
