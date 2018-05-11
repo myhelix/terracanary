@@ -99,7 +99,7 @@ else
 fi
 
 # Shared final check/cleanup
-target=$(terracanary output -S routing full_check_fqdn)
+target=$(terracanary output -S routing final_check_fqdn)
 proto=$(terracanary output -s $MAIN lb_protocol)
 deploy_check $target $proto
 

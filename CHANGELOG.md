@@ -1,6 +1,6 @@
 ## 1.3.0 (2018-05-10)
 Changes:
-- Use full_check_fqdn to health check services
+- Use final_check_fqdn to health check services
 
 ## 1.2.2 (2018-04-12)
 Fixes:
