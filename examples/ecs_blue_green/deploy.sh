@@ -99,7 +99,7 @@ else
 fi
 
 # Shared final check/cleanup
-target=$(terracanary output -S routing external_fqdn)
+target=$(terracanary output -S routing final_check_fqdn)
 proto=$(terracanary output -s $MAIN lb_protocol)
 deploy_check $target $proto
 
@@ -114,4 +114,3 @@ terracanary destroy --legacy --skip-confirmation -f main/providers.tf \
 			                    -l aws_route53_record.default
 
 echo "Success!"
-
