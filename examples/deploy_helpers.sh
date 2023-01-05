@@ -22,6 +22,7 @@ function deploy_check {
 }
 
 function _run_task {
+    sleep 30
     region=`terracanary output -s $MAIN region` && \
     cluster=`terracanary output -s $MAIN cluster` && \
     task=`terracanary output -s $CODE task_revision_arn` && \
@@ -36,6 +37,7 @@ function run_migrations {
 
 function deploy_check_task {
     if [[ "$RUN_DEPLOY_CHECK" ]]; then
+        sleep 30
         _run_task scripts/check_deployability.sh
     fi
 }
